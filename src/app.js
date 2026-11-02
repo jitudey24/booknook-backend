@@ -10,7 +10,7 @@ import borrowsRoutes from "./routes/borrows.routes.js";
 // connection is ready.
 // ========================================
 
-export function createApp(collections) {
+export default function createApp(collections) {
   const app = express();
 
   app.use(cors());
