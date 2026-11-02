@@ -1,7 +1,10 @@
 import { MongoClient } from "mongodb";
 import { MONGODB_URI, MONGODB_DB } from "./env.js";
 
-export const client = new MongoClient(MONGODB_URI);
+export const client = new MongoClient(MONGODB_URI, {
+  serverSelectionTimeoutMS: 5000,
+  maxPoolSize: 10,
+});
 
 // ========================================
 // MIGRATE OLD BOOKS
@@ -78,9 +81,12 @@ async function backfillImportedBooks(booksCollection) {
 // ========================================
 // DATABASE CONNECTION
 // Returns { db, booksCollection, borrowsCollection }
+//
+// runSetup = true  -> local: migrations + index run once
+// runSetup = false -> Vercel: only connect (fast cold start)
 // ========================================
 
-export async function connectDB() {
+export async function connectDB({ runSetup = true } = {}) {
   await client.connect();
 
   console.log("MongoDB Connected Successfully!");
@@ -92,12 +98,14 @@ export async function connectDB() {
 
   console.log("Connected Database:", db.databaseName);
 
-  await migrateOldBooks(booksCollection);
-  await backfillImportedBooks(booksCollection);
-  await createBorrowSafetyIndex(borrowsCollection);
+  if (runSetup) {
+    await migrateOldBooks(booksCollection);
+    await backfillImportedBooks(booksCollection);
+    await createBorrowSafetyIndex(borrowsCollection);
 
-  console.log("Total Books:", await booksCollection.countDocuments());
-  console.log("Total Borrows:", await borrowsCollection.countDocuments());
+    console.log("Total Books:", await booksCollection.countDocuments());
+    console.log("Total Borrows:", await borrowsCollection.countDocuments());
+  }
 
   return { db, booksCollection, borrowsCollection };
 }
