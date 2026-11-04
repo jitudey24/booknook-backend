@@ -18,118 +18,118 @@ export default function borrowsRoutes({ booksCollection, borrowsCollection }) {
   // POST /borrows
   // ========================================
 
-  router.post("/", authenticateToken, async (req, res) => {
-    try {
-      const { bookId } = req.body;
+  // router.post("/", authenticateToken, async (req, res) => {
+  //   try {
+  //     const { bookId } = req.body;
 
-      if (!bookId || !isValidObjectId(bookId)) {
-        return res.status(400).json({
-          success: false,
-          message: "Valid book ID is required.",
-        });
-      }
+  //     if (!bookId || !isValidObjectId(bookId)) {
+  //       return res.status(400).json({
+  //         success: false,
+  //         message: "Valid book ID is required.",
+  //       });
+  //     }
 
-      const bookObjectId = new ObjectId(bookId);
+  //     const bookObjectId = new ObjectId(bookId);
 
-      const book = await booksCollection.findOne({
-        _id: bookObjectId,
-      });
+  //     const book = await booksCollection.findOne({
+  //       _id: bookObjectId,
+  //     });
 
-      if (!book) {
-        return res.status(404).json({
-          success: false,
-          message: "Book not found.",
-        });
-      }
+  //     if (!book) {
+  //       return res.status(404).json({
+  //         success: false,
+  //         message: "Book not found.",
+  //       });
+  //     }
 
-      // Prevent an already active duplicate borrow.
-      const existingBorrow = await borrowsCollection.findOne({
-        bookId: bookId,
-        userEmail: req.user.email,
-        isReturned: false,
-      });
+  //     // Prevent an already active duplicate borrow.
+  //     const existingBorrow = await borrowsCollection.findOne({
+  //       bookId: bookId,
+  //       userEmail: req.user.email,
+  //       isReturned: false,
+  //     });
 
-      if (existingBorrow) {
-        return res.status(409).json({
-          success: false,
-          message: "You have already borrowed this book.",
-        });
-      }
+  //     if (existingBorrow) {
+  //       return res.status(409).json({
+  //         success: false,
+  //         message: "You have already borrowed this book.",
+  //       });
+  //     }
 
-      // Atomically reserve one available copy.
-      const stockResult = await booksCollection.updateOne(
-        {
-          _id: bookObjectId,
-          totalCopies: { $gt: 0 },
-        },
-        {
-          $inc: { totalCopies: -1 },
-        },
-      );
+  //     // Atomically reserve one available copy.
+  //     const stockResult = await booksCollection.updateOne(
+  //       {
+  //         _id: bookObjectId,
+  //         totalCopies: { $gt: 0 },
+  //       },
+  //       {
+  //         $inc: { totalCopies: -1 },
+  //       },
+  //     );
 
-      if (stockResult.modifiedCount !== 1) {
-        return res.status(409).json({
-          success: false,
-          message: "This book is currently not available.",
-        });
-      }
+  //     if (stockResult.modifiedCount !== 1) {
+  //       return res.status(409).json({
+  //         success: false,
+  //         message: "This book is currently not available.",
+  //       });
+  //     }
 
-      const borrowDate = new Date();
+  //     const borrowDate = new Date();
 
-      const returnDate = new Date(borrowDate);
-      returnDate.setDate(returnDate.getDate() + 14);
+  //     const returnDate = new Date(borrowDate);
+  //     returnDate.setDate(returnDate.getDate() + 14);
 
-      const newBorrow = {
-        bookId: book._id.toString(),
-        bookTitle: book.title,
-        bookImage: book.image,
+  //     const newBorrow = {
+  //       bookId: book._id.toString(),
+  //       bookTitle: book.title,
+  //       bookImage: book.image,
 
-        userName: req.user.name,
-        userEmail: req.user.email,
+  //       userName: req.user.name,
+  //       userEmail: req.user.email,
 
-        borrowDate,
-        returnDate,
-        isReturned: false,
-        returnedAt: null,
-        createdAt: new Date(),
-      };
+  //       borrowDate,
+  //       returnDate,
+  //       isReturned: false,
+  //       returnedAt: null,
+  //       createdAt: new Date(),
+  //     };
 
-      try {
-        const result = await borrowsCollection.insertOne(newBorrow);
+  //     try {
+  //       const result = await borrowsCollection.insertOne(newBorrow);
 
-        return res.status(201).json({
-          success: true,
-          message: "Book borrowed successfully!",
-          data: {
-            _id: result.insertedId,
-            ...newBorrow,
-          },
-        });
-      } catch (insertError) {
-        // Restore stock if saving the borrow record fails.
-        await booksCollection.updateOne(
-          { _id: bookObjectId },
-          { $inc: { totalCopies: 1 } },
-        );
+  //       return res.status(201).json({
+  //         success: true,
+  //         message: "Book borrowed successfully!",
+  //         data: {
+  //           _id: result.insertedId,
+  //           ...newBorrow,
+  //         },
+  //       });
+  //     } catch (insertError) {
+  //       // Restore stock if saving the borrow record fails.
+  //       await booksCollection.updateOne(
+  //         { _id: bookObjectId },
+  //         { $inc: { totalCopies: 1 } },
+  //       );
 
-        if (insertError.code === 11000) {
-          return res.status(409).json({
-            success: false,
-            message: "You have already borrowed this book.",
-          });
-        }
+  //       if (insertError.code === 11000) {
+  //         return res.status(409).json({
+  //           success: false,
+  //           message: "You have already borrowed this book.",
+  //         });
+  //       }
 
-        throw insertError;
-      }
-    } catch (error) {
-      console.error("Borrow Book Error:", error);
+  //       throw insertError;
+  //     }
+  //   } catch (error) {
+  //     console.error("Borrow Book Error:", error);
 
-      return res.status(500).json({
-        success: false,
-        message: "Failed to borrow book.",
-      });
-    }
-  });
+  //     return res.status(500).json({
+  //       success: false,
+  //       message: "Failed to borrow book.",
+  //     });
+  //   }
+  // });
 
   // ========================================
   // API 7: GET MY BORROWS (PROTECTED)

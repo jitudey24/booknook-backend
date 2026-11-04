@@ -36,7 +36,7 @@ export const authenticateToken = async (req, res, next) => {
       audience: AUTH_BASE_URL,
     });
 
-    // const email = normalizeEmail(payload.email);
+    const email = normalizeEmail(payload.email);
 
     if (!email || typeof payload.sub !== "string") {
       return res.status(401).json({
