@@ -12,11 +12,11 @@ export const client = new MongoClient(MONGODB_URI, {
 // Give them one available copy by default.
 // ========================================
 
-async function migrateOldBooks(booksCollection) {
-  const migrationResult = await booksCollection.updateMany(
-    { totalCopies: { $exists: false } },
-    { $set: { totalCopies: 1 } },
-  );
+// async function migrateOldBooks(booksCollection) {
+//   const migrationResult = await booksCollection.updateMany(
+//     { totalCopies: { $exists: false } },
+//     { $set: { totalCopies: 1 } },
+//   );
 
   console.log(
     "Old books updated with default copies:",
