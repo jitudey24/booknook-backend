@@ -23,32 +23,32 @@ export default function booksRoutes({ booksCollection, borrowsCollection }) {
   // GET /books
   // ========================================
 
-  router.get("/", async (req, res) => {
-    try {
-      const requestedLimit = Number.parseInt(req.query.limit, 10);
+  // router.get("/", async (req, res) => {
+  //   try {
+  //     const requestedLimit = Number.parseInt(req.query.limit, 10);
 
-      let query = booksCollection.find().sort({ createdAt: -1, _id: -1 });
+  //     let query = booksCollection.find().sort({ createdAt: -1, _id: -1 });
 
-      if (Number.isInteger(requestedLimit) && requestedLimit > 0) {
-        query = query.limit(Math.min(requestedLimit, 100));
-      }
+  //     if (Number.isInteger(requestedLimit) && requestedLimit > 0) {
+  //       query = query.limit(Math.min(requestedLimit, 100));
+  //     }
 
-      const books = await query.toArray();
+  //     const books = await query.toArray();
 
-      return res.status(200).json({
-        success: true,
-        message: "Books fetched successfully.",
-        data: books,
-      });
-    } catch (error) {
-      console.error("Get Books Error:", error);
+  //     return res.status(200).json({
+  //       success: true,
+  //       message: "Books fetched successfully.",
+  //       data: books,
+  //     });
+  //   } catch (error) {
+  //     console.error("Get Books Error:", error);
 
-      return res.status(500).json({
-        success: false,
-        message: "Failed to fetch books.",
-      });
-    }
-  });
+  //     return res.status(500).json({
+  //       success: false,
+  //       message: "Failed to fetch books.",
+  //     });
+  //   }
+  // });
 
   // ========================================
   // API 2: GET SINGLE BOOK (PROTECTED)
